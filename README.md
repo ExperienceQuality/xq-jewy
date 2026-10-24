@@ -50,7 +50,34 @@ your package (in "editable" mode, so your edits take effect immediately) plus
 the dev tools (pytest, ruff, ty). You never touch `pip` or activate the venv
 manually — `uv run` handles it.
 
-## 2. The daily loop
+## 2. Editor setup (VS Code)
+
+The repo ships `.vscode/extensions.json` and `.vscode/settings.json`, so:
+
+1. `code .` from the repo root (or File → Open Folder).
+2. VS Code pops "Do you want to install the recommended extensions?" →
+   **Install**. To trigger it manually: `Ctrl+Shift+X` → type
+   `@recommended` → install all.
+
+What each extension does:
+
+| Extension | Why |
+| --- | --- |
+| Python (`ms-python.python`) | Runs/debugs Python, picks up `.venv` automatically |
+| Pylance (`ms-python.vscode-pylance`) | Completions, go-to-definition, inline errors |
+| Ruff (`charliermarsh.ruff`) | Lint + format on save — you should basically never see a style complaint in CI |
+| ty (`astral-sh.ty`) | Live type errors as you type |
+| Even Better TOML (`tamasfe.even-better-toml`) | Syntax + autocomplete for `pyproject.toml` |
+
+Already configured in `settings.json` (nothing for you to do):
+
+- **Interpreter**: points at `.venv` — if imports show as unresolved, run
+  `Ctrl+Shift+P` → "Python: Select Interpreter" → pick `.venv`.
+- **Format on save** with ruff + auto-fix/organize-imports on save.
+- **pytest testing**: the flask/beaker icon in the sidebar lists and runs tests
+  from the UI — great for learning.
+
+## 3. The daily loop
 
 This is the rhythm of working on the repo. Every change follows it:
 
@@ -63,7 +90,7 @@ uv run ty check         # 3. do the types check out?
 
 Run these before every commit. All three passing = your change is in good shape.
 
-## 3. Your first change (do this now)
+## 4. Your first change (do this now)
 
 Goal: add a `shout` function that uppercases a greeting.
 
@@ -97,7 +124,7 @@ git push -u origin add-shout
 
 That's the whole job: **write code → write a test → run the loop → PR.**
 
-## 4. Where things go
+## 5. Where things go
 
 - **New code** → a module in `src/xq_jewy/` (e.g. `utils.py`).
 - **Use it elsewhere** → `from xq_jewy.utils import thing`.
@@ -106,7 +133,7 @@ That's the whole job: **write code → write a test → run the loop → PR.**
 - **Dev-only tool** → `uv add --dev ipython`.
 - **Update a dep** → `uv lock --upgrade-package <name>` then commit `uv.lock`.
 
-## 5. When things go wrong
+## 6. When things go wrong
 
 | Symptom | Fix |
 | --- | --- |
@@ -115,7 +142,7 @@ That's the whole job: **write code → write a test → run the loop → PR.**
 | ty complains | It means the types in your code don't line up — read the error, it names the file/line. |
 | Weird, stale behavior | `uv sync --reinstall` to rebuild the env. |
 
-## 6. Next concepts to learn (in order)
+## 7. Next concepts to learn (in order)
 
 1. Functions, type hints, docstrings — already in `core.py`.
 2. pytest `assert` and `pytest.raises` — already in `test_core.py`.
