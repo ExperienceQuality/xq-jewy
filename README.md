@@ -119,7 +119,8 @@ uv run fastmcp dev inspector src/xq_jewy/server.py   # web UI (needs Node.js)
 ```
 
 Settings come from (highest wins): CLI flags → environment variables →
-`.env` file → defaults in `config.py`. Try `cp .env.example .env` and change
+`.env` file → defaults in `config.py`. Every value is validated by
+`Settings`, so e.g. `--port 0` is rejected with a clear error. Try `cp .env.example .env` and change
 `XQ_JEWY_LOG_LEVEL=DEBUG`.
 
 ### Use it from Claude Desktop / Claude Code / Cursor
@@ -136,11 +137,24 @@ Or add it by hand to any client's JSON config:
 { "command": "uv", "args": ["run", "--directory", "/path/to/xq-jewy", "xq-jewy"] }
 ```
 
+### Securing the http transport
+
+On http, anyone who can reach the port can call your tools. Stay on
+`127.0.0.1` (the default) or set a token, and clients must then send
+`Authorization: Bearer <token>`:
+
+```bash
+XQ_JEWY_AUTH_TOKEN=change-me uv run xq-jewy --transport http
+```
+
+The server logs a warning if you bind a non-loopback host without a token.
+`/health` stays public so load balancers and Docker can probe it.
+
 ### Docker
 
 ```bash
 docker build -t xq-jewy .
-docker run --rm -p 8000:8000 xq-jewy     # http transport, /mcp and /health
+docker run --rm -p 8000:8000 -e XQ_JEWY_AUTH_TOKEN=change-me xq-jewy   # http, /mcp and /health
 ```
 
 ## 5. The daily loop
