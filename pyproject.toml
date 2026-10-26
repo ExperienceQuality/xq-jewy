@@ -5,33 +5,66 @@ build-backend = "hatchling.build"
 [project]
 name = "xq-jewy"
 version = "0.1.0"
-description = "A Python starter project"
+description = "xq-jewy: an MCP server built with FastMCP"
 readme = "README.md"
-requires-python = ">=3.10"
-license = { text = "MIT" }
-dependencies = []
+requires-python = ">=3.12"
+license = "MIT"
+license-files = ["LICENSE"]
+dependencies = [
+    "fastmcp>=4.1.4",
+    "pydantic-settings>=2.16.1",
+]
 
 [dependency-groups]
 dev = [
-    "pytest>=8.0",
-    "ruff>=0.6",
-    "ty>=0.0.1a1",
+    "httpx>=0.28.1",
+    "pre-commit>=4.7.0",
+    "pytest>=9.1",
+    "pytest-asyncio>=1.4.1",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.17",
+    "ty>=0.0.92",
 ]
+
+[project.scripts]
+xq-jewy = "xq_jewy.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/xq_jewy"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts = ["--strict-markers", "--cov=xq_jewy", "--cov-report=term-missing"]
+
+[tool.coverage.run]
+branch = true
+source = ["xq_jewy"]
+omit = ["src/xq_jewy/__main__.py"]
 
 [tool.ruff]
 line-length = 100
+target-version = "py312"
 src = ["src", "tests"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "B"]
+select = [
+    "E", "W",  # pycodestyle
+    "F",       # pyflakes
+    "I",       # isort (import order)
+    "UP",      # pyupgrade (modern syntax)
+    "B",       # bugbear (likely bugs)
+    "SIM",     # simplify
+    "C4",      # comprehensions
+    "PT",      # pytest style
+    "RUF",     # ruff-specific
+    "ASYNC",   # async pitfalls
+]
+
+[tool.ty.environment]
+python-version = "3.12"
 
 [tool.ty.rules]
-# Start strict-ish but sane; relax rules here as you learn.
 # See https://docs.astral.sh/ty/reference/rules/
 possibly-unresolved-reference = "error"
