@@ -1,9 +1,8 @@
 """Runtime settings, loaded from environment variables (prefix ``XQ_JEWY_``) or ``.env``."""
 
-from functools import lru_cache
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 Transport = Literal["stdio", "http"]
@@ -22,8 +21,5 @@ class Settings(BaseSettings):
     host: str = "127.0.0.1"
     port: int = Field(default=8000, ge=1, le=65535)
     log_level: LogLevel = "INFO"
-
-
-@lru_cache
-def get_settings() -> Settings:
-    return Settings()
+    auth_token: SecretStr | None = None
+    """If set, http clients must send ``Authorization: Bearer <token>``."""

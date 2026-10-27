@@ -15,7 +15,8 @@ ENV PATH="/app/.venv/bin:$PATH" \
     XQ_JEWY_TRANSPORT=http \
     XQ_JEWY_HOST=0.0.0.0 \
     XQ_JEWY_PORT=8000
+# Listens on all interfaces inside the container; set XQ_JEWY_AUTH_TOKEN when publishing the port.
 USER app
 EXPOSE 8000
-HEALTHCHECK CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+HEALTHCHECK CMD ["python", "-c", "import os, urllib.request; urllib.request.urlopen(f\"http://127.0.0.1:{os.environ.get('XQ_JEWY_PORT', '8000')}/health\")"]
 CMD ["xq-jewy"]
