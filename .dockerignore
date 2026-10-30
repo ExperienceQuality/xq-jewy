@@ -1,11 +1,8 @@
 .git
-.venv
-.env
-**/__pycache__
-.pytest_cache
-.ruff_cache
-.coverage
-htmlcov
-tests
-.vscode
 .github
+.vscode
+.env
+node_modules
+dist
+coverage
+tests

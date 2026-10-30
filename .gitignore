@@ -1,21 +1,8 @@
-# Python
-__pycache__/
-*.py[cod]
-*.egg-info/
-.eggs/
-build/
+# Dependencies / build output
+node_modules/
 dist/
-
-# Virtual environments
-.venv/
-venv/
-
-# Test / tool caches
-.pytest_cache/
-.ruff_cache/
-.mypy_cache/
-.coverage
-htmlcov/
+coverage/
+*.tsbuildinfo
 
 # Editors / OS
 .idea/

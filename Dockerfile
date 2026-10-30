@@ -1,22 +1,24 @@
 # syntax=docker/dockerfile:1
-FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS builder
-ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PYTHON_DOWNLOADS=0
+FROM node:24-slim AS build
+RUN npm install --global pnpm@12.16.1
 WORKDIR /app
-COPY pyproject.toml uv.lock ./
-RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked --no-install-project --no-dev
-COPY README.md ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm install --frozen-lockfile --ignore-scripts
+COPY tsconfig.json tsconfig.build.json ./
 COPY src ./src
-RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked --no-dev
+RUN pnpm build && pnpm prune --prod --ignore-scripts
 
-FROM python:3.12-slim-bookworm
-RUN useradd --create-home app
-COPY --from=builder --chown=app:app /app /app
-ENV PATH="/app/.venv/bin:$PATH" \
+FROM node:24-slim
+ENV NODE_ENV=production \
     XQ_JEWY_TRANSPORT=http \
     XQ_JEWY_HOST=0.0.0.0 \
     XQ_JEWY_PORT=8000
+WORKDIR /app
+COPY --from=build --chown=node:node /app/package.json ./
+COPY --from=build --chown=node:node /app/node_modules ./node_modules
+COPY --from=build --chown=node:node /app/dist ./dist
 # Listens on all interfaces inside the container; set XQ_JEWY_AUTH_TOKEN when publishing the port.
-USER app
+USER node
 EXPOSE 8000
-HEALTHCHECK CMD ["python", "-c", "import os, urllib.request; urllib.request.urlopen(f\"http://127.0.0.1:{os.environ.get('XQ_JEWY_PORT', '8000')}/health\")"]
-CMD ["xq-jewy"]
+HEALTHCHECK CMD ["node", "-e", "fetch(`http://127.0.0.1:${process.env.XQ_JEWY_PORT}/health`).then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"]
+CMD ["node", "dist/main.js"]
