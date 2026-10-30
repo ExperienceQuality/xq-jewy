@@ -252,6 +252,7 @@ That's the whole job: **logic → test → MCP wrapper → test → check → PR
 | `git commit` fails with Biome/tsc output      | The hook caught something. Biome usually fixes it itself — `git add -A`, commit again. |
 | `pnpm typecheck` complains                    | Types don't line up; the error names file + line.                                      |
 | MCP app shows no tools / server crashed       | Run `pnpm start` yourself and read the error; check for stray `console.log`s.          |
+| `` `pre-commit` not found `` on commit        | Old Python hook from before the switch: `pnpm exec lefthook install --force`.          |
 | `Ignored build scripts` during install        | pnpm blocks install scripts by default; allow one in `pnpm-workspace.yaml` if needed.  |
 | Weird, stale behavior                         | `rm -rf node_modules && pnpm install`.                                                 |
 
