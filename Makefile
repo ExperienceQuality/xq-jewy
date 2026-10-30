@@ -1,4 +1,4 @@
-.PHONY: sync lint format typecheck check run help
+.PHONY: sync lint format typecheck test check run help
 .DEFAULT_GOAL := help
 
 sync: ## install deps into .venv
@@ -12,6 +12,9 @@ format: ## run ruff formatter
 
 typecheck: ## run ty type checker
 	uv run ty check
+
+test: ## run pytest
+	uv run pytest
 
 check: lint typecheck ## run all checks (lint + typecheck)
 
