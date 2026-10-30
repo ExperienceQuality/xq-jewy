@@ -3,19 +3,12 @@
   "configurations": [
     {
       "name": "xq-jewy (http)",
-      "type": "debugpy",
+      "type": "node",
       "request": "launch",
-      "module": "xq_jewy",
-      "args": ["--transport", "http", "--log-level", "DEBUG"],
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "pytest (current file)",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "pytest",
-      "args": ["${file}", "--no-cov"],
-      "console": "integratedTerminal"
+      "program": "${workspaceFolder}/src/main.ts",
+      "args": ["--transport", "http", "--log-level", "debug"],
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
     }
   ]
 }

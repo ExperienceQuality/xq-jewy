@@ -2,8 +2,8 @@
   "servers": {
     "xq-jewy": {
       "type": "stdio",
-      "command": "uv",
-      "args": ["run", "--directory", "${workspaceFolder}", "xq-jewy"]
+      "command": "node",
+      "args": ["${workspaceFolder}/src/main.ts"]
     }
   }
 }
