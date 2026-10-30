@@ -1,9 +1,0 @@
-{
-  "servers": {
-    "xq-jewy": {
-      "type": "stdio",
-      "command": "node",
-      "args": ["${workspaceFolder}/src/main.ts"]
-    }
-  }
-}
