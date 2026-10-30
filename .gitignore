@@ -1,0 +1,6 @@
+.devin
+.squad
+.vscode
+.venv
+__pycache__/
+*.pyc
