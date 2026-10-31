@@ -1,0 +1,27 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write # required to create GitHub Releases
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Build distributions
+        run: uv build
+
+      - name: Create GitHub Release with wheel + sdist
+        run: gh release create ${{ github.ref_name }} dist/* --generate-notes --verify-tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
