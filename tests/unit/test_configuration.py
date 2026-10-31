@@ -1,69 +1,55 @@
 import pytest
 from pydantic import ValidationError
 
-from xq_jewy.configuration import ServerConfig, load_config
+from xq_jewy.domain import Configuration
 
 
-def _base() -> dict:
+def _valid() -> dict:
     return {
-        "capabilities": {
-            "stubs": {"enabled": True},
-            "rest": {"enabled": True},
-            "assertions": {"enabled": True},
-            "reporting": {"enabled": True},
+        "tags": ["stub", "verification"],
+        "server": {
+            "api_url": "http://localhost:8080",
+            "wiremock_url": "http://localhost:8081",
         },
-        "enabled_tags": ["stub", "rest", "verification", "reporting"],
     }
 
 
-def test_valid_config():
-    cfg = ServerConfig.model_validate(_base())
-    assert cfg.enabled_capabilities() == [
-        "stubs",
-        "rest",
-        "assertions",
-        "reporting",
-    ]
+def test_valid_config_parses():
+    cfg = Configuration.model_validate(_valid())
+    assert len(cfg.tags) == 2
+    assert cfg.server.api_url == "http://localhost:8080"
 
 
-def test_unknown_capability_fails():
-    data = _base()
-    data["capabilities"]["mobile"] = {"enabled": True}
-    with pytest.raises(ValidationError, match="unknown capabilities"):
-        ServerConfig.model_validate(data)
+def test_missing_server_fails():
+    data = _valid()
+    del data["server"]
+    with pytest.raises(ValidationError, match="server"):
+        Configuration.model_validate(data)
 
 
-def test_empty_enabled_tags_fails():
-    data = _base()
-    data["enabled_tags"] = []
-    with pytest.raises(ValidationError):
-        ServerConfig.model_validate(data)
+def test_misspelled_server_key_fails():
+    data = _valid()
+    data["server_wrong"] = data.pop("server")
+    with pytest.raises(ValidationError, match="server"):
+        Configuration.model_validate(data)
 
 
-def test_tag_from_disabled_capability_fails():
-    data = _base()
-    data["capabilities"]["stubs"]["enabled"] = False
-    with pytest.raises(ValidationError, match="enabled_tags"):
-        ServerConfig.model_validate(data)
+def test_unknown_tag_value_fails():
+    data = _valid()
+    data["tags"] = ["not-a-real-tag"]
+    with pytest.raises(ValidationError, match="tags"):
+        Configuration.model_validate(data)
 
 
-def test_tag_not_in_universe_fails():
-    data = _base()
-    data["enabled_tags"] = ["nonexistent"]
-    with pytest.raises(ValidationError, match="enabled_tags"):
-        ServerConfig.model_validate(data)
+def test_tags_not_a_list_fails():
+    data = _valid()
+    data["tags"] = "stub"
+    with pytest.raises(ValidationError, match="tags"):
+        Configuration.model_validate(data)
 
 
-def test_missing_config_file_fails(tmp_path):
-    with pytest.raises(FileNotFoundError):
-        load_config(tmp_path / "nope.yaml")
-
-
-def test_load_config_from_yaml(tmp_path):
-    path = tmp_path / "config.yaml"
-    path.write_text(
-        "capabilities:\n  rest:\n    enabled: true\nenabled_tags:\n  - rest\n"
-    )
-    cfg = load_config(path)
-    assert cfg.enabled_capabilities() == ["rest"]
-    assert cfg.enabled_tags == {"rest"}
+def test_server_missing_url_fails():
+    data = _valid()
+    del data["server"]["wiremock_url"]
+    with pytest.raises(ValidationError, match="wiremock_url"):
+        Configuration.model_validate(data)

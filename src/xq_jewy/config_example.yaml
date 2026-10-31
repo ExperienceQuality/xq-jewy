@@ -1,0 +1,10 @@
+tags:
+  - stub
+  - verification
+  - routine-service
+  - exercise-service
+  - fitness-bff
+
+server_wrong:
+  api_url: "http://localhost:8080"
+  wiremock_url: "http://localhost:8081"
