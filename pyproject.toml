@@ -1,39 +1,59 @@
 [project]
 name = "xq-jewy"
 version = "0.1.0"
-description = "Add your description here"
+description = "FastMCP server exposing XQ backend-testing tools to MCP-compatible LLM hosts"
 readme = "README.md"
 authors = [
     { name = "chauhaidang", email = "chauhaidang1@gmail.com" }
 ]
-requires-python = ">=3.13"
-dependencies = []
+keywords = ["mcp", "fastmcp", "llm", "tools", "testing"]
+requires-python = ">=3.12"
+dependencies = [
+    "fastmcp>=4,<5",
+    "httpx>=0.28.1",
+    "pydantic>=2",
+    "pyyaml>=6",
+]
 
 [project.scripts]
-xq-jewy = "xq_jewy.main:main"
+xq-jewy = "xq_jewy.server:main"
 
 [build-system]
-requires = ["uv_build>=0.12.10,<0.13.0"]
-build-backend = "uv_build"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/xq_jewy"]
 
 [dependency-groups]
 dev = [
     "pytest>=9.2.0",
+    "pytest-asyncio>=1.4.1",
     "ruff>=0.17.3",
     "ty>=0.0.95",
 ]
 
 [tool.ruff]
-target-version = "py313"
-line-length = 100
+target-version = "py312"
+line-length = 88
 src = ["src"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
 
+[tool.ruff.format]
+quote-style = "double"
+
 [tool.ty.rules]
 possibly-unresolved-reference = "error"
+
+[tool.ty.environment]
+python-version = "3.12"
+
+[tool.ty.src]
+include = ["src", "tests"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+asyncio_mode = "auto"
