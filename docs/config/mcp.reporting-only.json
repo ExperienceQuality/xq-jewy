@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "xq-jewy": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/ExperienceQuality/xq-jewy",
+        "xq-jewy"
+      ],
+      "env": {
+        "XQ_JEWY_CONFIG": "/absolute/path/to/xq.yaml"
+      }
+    }
+  }
+}

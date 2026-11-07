@@ -1,3 +1,9 @@
+# INVALID FIXTURE — intentionally uses the legacy tags / server_wrong schema.
+# Do not copy this file for consumer setup. Canonical examples:
+#   - config.example.yaml
+#   - docs/config/xq.*.yaml
+# The real loader (#16) rejects this shape.
+
 tags:
   - stub
   - verification

@@ -21,14 +21,43 @@ A tool file + a config loader + a bootstrapper is the whole app until proven oth
 
 ## Configuration
 
-- `XQ_JEWY_CONFIG` env var is **required** and must be an **absolute path**.
-  No default, no CWD-relative lookup — MCP servers inherit unpredictable
-  working directories depending on the host (desktop app vs CLI vs agent).
-- Missing or relative path → raise immediately with a clear message telling
-  the consumer what to set.
-- No secrets, tokens, or base URLs in YAML. Secrets come from env vars only.
+Canonical schema is `capabilities` / `enabled_tags` (see
+`config.example.yaml` and `docs/config/`). Legacy `tags` / `server` YAML is
+**rejected**.
+
+### Env vars (exact names)
+
+| Variable | Role |
+|---|---|
+| `XQ_JEWY_CONFIG` | **Required.** Absolute path to the YAML file. No default, no CWD-relative lookup, no `~` / `$VAR` expansion. |
+| `XQ_JEWY_API_BASE_URL` | Required when the union of enabled capabilities needs the API. |
+| `XQ_JEWY_WIREMOCK_BASE_URL` | Required when the union needs WireMock. |
+
+MCP servers inherit unpredictable working directories depending on the host
+(desktop app vs CLI vs agent), so relative paths are refused.
+
+### Capability → tag → endpoint
+
+| Capability   | Tag            | Endpoint(s)    |
+|--------------|----------------|----------------|
+| `stubs`      | `stub`         | WireMock       |
+| `rest`       | `rest`         | API            |
+| `assertions` | `verification` | API + WireMock |
+| `reporting`  | `reporting`    | none           |
+
+Required URL env vars are the **union** over enabled capabilities.
+A URL that is set is validated even when not needed — omit unused URL vars.
+
+### YAML rules
+
+- YAML holds **no URLs and no secrets**.
 - `enabled_tags` must be non-empty and covered by enabled capabilities.
-  Validate before building anything.
+- Validate before building anything.
+
+### First-error order
+
+path → file/parse → schema/tag coverage → required-set derivation → API →
+WireMock → aggregate invariant → server construction and run.
 
 ## Tools
 
@@ -78,6 +107,7 @@ A tool file + a config loader + a bootstrapper is the whole app until proven oth
 - `tests/architecture/` — discovery, tag filtering, disabled-capability
   behavior. Build servers in-test against the real `tools/` tree.
 - `tests/integration/` — real HTTP flows; only when external services exist.
+- `tests/system/` — docs/examples contracts (QA-SYS-*).
 - Every new tool needs at least one test proving it is discovered and tagged.
 
 ## Quality gate

@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "xq-jewy": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/ExperienceQuality/xq-jewy",
+        "xq-jewy"
+      ],
+      "env": {
+        "XQ_JEWY_CONFIG": "/absolute/path/to/xq.yaml",
+        "XQ_JEWY_WIREMOCK_BASE_URL": "http://127.0.0.1:8081"
+      }
+    }
+  }
+}
