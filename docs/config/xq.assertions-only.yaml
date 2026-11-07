@@ -1,0 +1,15 @@
+capabilities:
+  stubs:
+    enabled: false
+
+  rest:
+    enabled: false
+
+  assertions:
+    enabled: true
+
+  reporting:
+    enabled: false
+
+enabled_tags:
+  - verification
