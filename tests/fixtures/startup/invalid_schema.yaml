@@ -1,0 +1,6 @@
+# Valid YAML that fails the approved capabilities/enabled_tags schema.
+capabilities:
+  stubs:
+    enabled: true
+
+enabled_tags: []
