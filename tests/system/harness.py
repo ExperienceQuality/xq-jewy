@@ -14,18 +14,34 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
-WORKTREE_ROOT = Path(__file__).resolve().parents[2]
-FIXTURES_STARTUP = (
-    WORKTREE_ROOT / "tests" / "fixtures" / "startup"
-)
+# MCP initialize negotiation version (stdio JSON-RPC).
+_MCP_PROTOCOL_VERSION = "2024-11-05"
 
-# Newline-delimited JSON-RPC (mcp.server.stdio).
-_DEFAULT_PROTOCOL_VERSION = "2024-11-05"
+
+def repo_root() -> Path:
+    """Repo root = nearest ancestor with pyproject.toml.
+
+    Survives moving this file under tests/, unlike a
+    fixed ``Path(__file__).parents[N]`` hop count.
+    """
+    here = Path(__file__).resolve()
+    for parent in (here.parent, *here.parents):
+        if (parent / "pyproject.toml").is_file():
+            return parent
+    raise RuntimeError(
+        "repo root not found (no pyproject.toml)"
+    )
+
+
+REPO_ROOT = repo_root()
+FIXTURES_STARTUP = (
+    REPO_ROOT / "tests" / "fixtures" / "startup"
+)
 
 
 @dataclass(frozen=True)
-class ProcResult:
-    """Captured subprocess outcome."""
+class XqJewyRunResult:
+    """Outcome of one ``xq-jewy`` subprocess run."""
 
     exit_code: int | None
     stdout: bytes
@@ -52,7 +68,7 @@ def resolve_xq_jewy_command() -> list[str]:
             uv,
             "run",
             "--project",
-            str(WORKTREE_ROOT),
+            str(REPO_ROOT),
             "xq-jewy",
         ]
     script = shutil.which("xq-jewy")
@@ -64,7 +80,12 @@ def resolve_xq_jewy_command() -> list[str]:
 
 
 def base_env(*, clear_xq: bool = True) -> dict[str, str]:
-    """Copy env; optionally strip XQ_JEWY_*."""
+    """Build subprocess env from ``os.environ``.
+
+    When ``clear_xq`` is true, drop every
+    ``XQ_JEWY_*`` key so tests control config/URL
+    vars explicitly (no leakage from the host).
+    """
     env = dict(os.environ)
     if clear_xq:
         for key in list(env):
@@ -79,11 +100,15 @@ def run_xq_jewy(
     stdin_bytes: bytes | None = None,
     timeout: float = 5.0,
     cwd: str | Path | None = None,
-) -> ProcResult:
-    """Spawn xq-jewy; capture stdout/stderr/exit."""
+) -> XqJewyRunResult:
+    """Spawn ``xq-jewy``, wait, return I/O + exit.
+
+    Captures stdout/stderr bytes. On timeout,
+    ``timed_out`` is true and ``exit_code`` is None.
+    """
     cmd = resolve_xq_jewy_command()
     run_cwd = (
-        str(cwd) if cwd is not None else str(WORKTREE_ROOT)
+        str(cwd) if cwd is not None else str(REPO_ROOT)
     )
     try:
         completed = subprocess.run(
@@ -96,13 +121,13 @@ def run_xq_jewy(
             check=False,
         )
     except subprocess.TimeoutExpired as exc:
-        return ProcResult(
+        return XqJewyRunResult(
             exit_code=None,
             stdout=exc.stdout or b"",
             stderr=exc.stderr or b"",
             timed_out=True,
         )
-    return ProcResult(
+    return XqJewyRunResult(
         exit_code=completed.returncode,
         stdout=completed.stdout or b"",
         stderr=completed.stderr or b"",
@@ -112,10 +137,10 @@ def run_xq_jewy(
 
 def mcp_initialize_message(
     *,
-    protocol_version: str = _DEFAULT_PROTOCOL_VERSION,
+    protocol_version: str = _MCP_PROTOCOL_VERSION,
     request_id: int = 1,
 ) -> bytes:
-    """One NDJSON JSON-RPC initialize request."""
+    """One NDJSON JSON-RPC ``initialize`` request."""
     payload = {
         "jsonrpc": "2.0",
         "id": request_id,
@@ -138,16 +163,16 @@ def speak_mcp_initialize(
     env: dict[str, str] | None = None,
     timeout: float = 5.0,
     cwd: str | Path | None = None,
-) -> tuple[ProcResult, dict | None]:
+) -> tuple[XqJewyRunResult, dict | None]:
     """
     Spawn xq-jewy, send initialize, read one line.
 
     Keeps the process until timeout or exit, then
-    terminates. Returns (ProcResult, parsed result).
+    terminates. Returns (run result, parsed JSON).
     """
     cmd = resolve_xq_jewy_command()
     run_cwd = (
-        str(cwd) if cwd is not None else str(WORKTREE_ROOT)
+        str(cwd) if cwd is not None else str(REPO_ROOT)
     )
     proc = subprocess.Popen(
         cmd,
@@ -201,7 +226,7 @@ def speak_mcp_initialize(
     remainder = proc.stdout.read() if proc.stdout else b""
     stdout_buf.extend(remainder)
     return (
-        ProcResult(
+        XqJewyRunResult(
             exit_code=proc.returncode,
             stdout=bytes(stdout_buf),
             stderr=stderr or b"",
@@ -215,17 +240,16 @@ def run_python_import(
     module: str,
     *,
     timeout: float = 5.0,
-) -> ProcResult:
+) -> XqJewyRunResult:
     """Import module in a fresh interpreter."""
     cmd = [sys.executable, "-c", f"import {module}"]
-    # Prefer uv so the worktree package is used.
     uv = shutil.which("uv")
     if uv is not None:
         cmd = [
             uv,
             "run",
             "--project",
-            str(WORKTREE_ROOT),
+            str(REPO_ROOT),
             "python",
             "-c",
             f"import {module}",
@@ -235,18 +259,18 @@ def run_python_import(
             cmd,
             capture_output=True,
             env=base_env(),
-            cwd=str(WORKTREE_ROOT),
+            cwd=str(REPO_ROOT),
             timeout=timeout,
             check=False,
         )
     except subprocess.TimeoutExpired as exc:
-        return ProcResult(
+        return XqJewyRunResult(
             exit_code=None,
             stdout=exc.stdout or b"",
             stderr=exc.stderr or b"",
             timed_out=True,
         )
-    return ProcResult(
+    return XqJewyRunResult(
         exit_code=completed.returncode,
         stdout=completed.stdout or b"",
         stderr=completed.stderr or b"",
@@ -255,7 +279,7 @@ def run_python_import(
 
 
 def assert_config_failure_contract(
-    result: ProcResult,
+    result: XqJewyRunResult,
 ) -> None:
     """
     Config failure contract (#11 / #22):

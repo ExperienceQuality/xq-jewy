@@ -51,5 +51,7 @@ def test_tags_not_a_list_fails():
 def test_server_missing_url_fails():
     data = _valid()
     del data["server"]["wiremock_url"]
-    with pytest.raises(ValidationError, match="wiremock_url"):
+    with pytest.raises(
+        ValidationError, match="wiremock_url"
+    ):
         Configuration.model_validate(data)

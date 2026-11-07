@@ -4,33 +4,18 @@ IDs: QA-ACC-01, QA-SYS-01..06. Paired with #11.
 
 Harness + fixtures ship now. Behavioral asserts
 xfail until #11 (server.py is still main: pass).
-
-tests/system/__init__.py is out of write scope;
-load harness by file path, not package import.
 """
 
 from __future__ import annotations
 
-import importlib.util
 import os
-import sys
-from pathlib import Path
 
 import pytest
 
-_HARNESS_PATH = (
-    Path(__file__).resolve().parent / "harness.py"
-)
-_spec = importlib.util.spec_from_file_location(
-    "xq_jewy_startup_harness",
-    _HARNESS_PATH,
-)
-assert _spec is not None and _spec.loader is not None
-harness = importlib.util.module_from_spec(_spec)
-sys.modules[_spec.name] = harness
-_spec.loader.exec_module(harness)
+from tests.system import harness
 
-_BLOCKED_ON_11 = pytest.mark.xfail(
+# Expect fail until #11 wires startup/config/stdio.
+xfail_until_issue_11 = pytest.mark.xfail(
     reason="blocked on #11",
     strict=False,
 )
@@ -57,7 +42,7 @@ def test_harness_fixture_paths_are_absolute():
     assert os.path.isabs(str(path))
 
 
-@_BLOCKED_ON_11
+@xfail_until_issue_11
 def test_qa_sys_01_missing_config_env():
     """Missing XQ_JEWY_CONFIG → failure contract."""
     env = harness.base_env(clear_xq=True)
@@ -65,7 +50,7 @@ def test_qa_sys_01_missing_config_env():
     harness.assert_config_failure_contract(result)
 
 
-@_BLOCKED_ON_11
+@xfail_until_issue_11
 def test_qa_sys_02_relative_config_path():
     """Relative XQ_JEWY_CONFIG is rejected."""
     env = harness.base_env(clear_xq=True)
@@ -76,7 +61,7 @@ def test_qa_sys_02_relative_config_path():
     harness.assert_config_failure_contract(result)
 
 
-@_BLOCKED_ON_11
+@xfail_until_issue_11
 def test_qa_sys_03_missing_config_file():
     """Missing absolute config path → failure."""
     missing = (
@@ -89,7 +74,7 @@ def test_qa_sys_03_missing_config_file():
     harness.assert_config_failure_contract(result)
 
 
-@_BLOCKED_ON_11
+@xfail_until_issue_11
 @pytest.mark.parametrize(
     "fixture_name",
     [
@@ -110,7 +95,7 @@ def test_qa_sys_04_invalid_config_contents(
     harness.assert_config_failure_contract(result)
 
 
-@_BLOCKED_ON_11
+@xfail_until_issue_11
 def test_qa_sys_05_valid_config_reaches_mcp_initialize():
     """Valid config: MCP initialize; keeps serving."""
     path = harness.fixture_path("valid_minimal.yaml")
@@ -129,7 +114,7 @@ def test_qa_sys_05_valid_config_reaches_mcp_initialize():
     assert result.exit_code != 0
 
 
-@_BLOCKED_ON_11
+@xfail_until_issue_11
 def test_qa_sys_06_no_banners_or_startup_network():
     """
     No import stdout; no banner before initialize;
