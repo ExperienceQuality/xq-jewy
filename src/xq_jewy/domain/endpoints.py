@@ -1,8 +1,17 @@
-"""Endpoint base-URL configuration (nullable fields)."""
+"""Endpoint kinds and nullable URL configuration."""
 
 from __future__ import annotations
 
+from enum import StrEnum
+
 from pydantic import BaseModel, ConfigDict
+
+
+class Endpoint(StrEnum):
+    """External endpoints a capability may need."""
+
+    API = "API"
+    WIREMOCK = "WireMock"
 
 
 class EndpointConfiguration(BaseModel):
