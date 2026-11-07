@@ -7,7 +7,10 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict
 
 from xq_jewy.domain.capabilities import CapabilityConfig
-from xq_jewy.domain.endpoints import EndpointConfiguration
+from xq_jewy.domain.endpoints import (
+    Endpoint,
+    EndpointConfiguration,
+)
 
 
 class ConfigError(Exception):
@@ -40,15 +43,11 @@ class StartupConfiguration(BaseModel):
         *,
         capability_config: CapabilityConfig,
         endpoints: EndpointConfiguration,
-        required: frozenset[str],
+        required: frozenset[Endpoint],
     ) -> StartupConfiguration:
-        """Aggregate invariant: required URLs present.
-
-        ``required`` holds endpoint names ``\"API\"`` and/or
-        ``\"WireMock\"`` (see capability_registry.Endpoint).
-        """
+        """Aggregate invariant: required URLs present."""
         if (
-            "API" in required
+            Endpoint.API in required
             and endpoints.api_base_url is None
         ):
             raise ConfigError(
@@ -57,7 +56,7 @@ class StartupConfiguration(BaseModel):
                 "provide an API base URL",
             )
         if (
-            "WireMock" in required
+            Endpoint.WIREMOCK in required
             and endpoints.wiremock_base_url is None
         ):
             raise ConfigError(

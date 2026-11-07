@@ -95,7 +95,7 @@ def load_configuration(
     return StartupConfiguration.from_parts(
         capability_config=capability_config,
         endpoints=endpoints,
-        required=frozenset(e.value for e in needed),
+        required=needed,
     )
 
 

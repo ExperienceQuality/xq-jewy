@@ -13,10 +13,10 @@ from xq_jewy.domain.config_type import (
     StartupConfiguration,
 )
 from xq_jewy.domain.endpoints import (
+    Endpoint,
     EndpointConfiguration,
 )
 from xq_jewy.services.capability_registry import (
-    Endpoint,
     required_endpoints,
 )
 from xq_jewy.services.endpoint_urls import (
@@ -57,12 +57,6 @@ def _caps(
     )
 
 
-def _names(
-    endpoints: frozenset[Endpoint],
-) -> frozenset[str]:
-    return frozenset(e.value for e in endpoints)
-
-
 def test_startup_accepts_required_endpoints() -> None:
     cap = _caps(assertions=True)
     needed = required_endpoints(cap.capabilities)
@@ -75,7 +69,7 @@ def test_startup_accepts_required_endpoints() -> None:
             api_base_url=_API,
             wiremock_base_url=_WM,
         ),
-        required=_names(needed),
+        required=needed,
     )
     assert cfg.endpoints.api_base_url == _API
     assert cfg.endpoints.wiremock_base_url == _WM
@@ -91,7 +85,7 @@ def test_startup_rejects_missing_api() -> None:
                 api_base_url=None,
                 wiremock_base_url=None,
             ),
-            required=_names(needed),
+            required=needed,
         )
     assert ei.value.code == "missing_env"
     assert ENV_API in str(ei.value)
@@ -107,7 +101,7 @@ def test_startup_rejects_missing_wiremock() -> None:
                 api_base_url=None,
                 wiremock_base_url=None,
             ),
-            required=_names(needed),
+            required=needed,
         )
     assert ei.value.code == "missing_env"
     assert ENV_WIREMOCK in str(ei.value)
@@ -123,7 +117,7 @@ def test_startup_reporting_allows_null_urls() -> None:
             api_base_url=None,
             wiremock_base_url=None,
         ),
-        required=_names(needed),
+        required=needed,
     )
     assert cfg.endpoints.api_base_url is None
     assert cfg.endpoints.wiremock_base_url is None

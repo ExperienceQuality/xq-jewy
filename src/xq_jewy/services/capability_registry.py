@@ -2,15 +2,16 @@
 
 from __future__ import annotations
 
-from enum import StrEnum
-
 from xq_jewy.domain.capabilities import Capabilities
+from xq_jewy.domain.endpoints import Endpoint
 
-
-class Endpoint(StrEnum):
-    API = "API"
-    WIREMOCK = "WireMock"
-
+# Re-export for callers that import Endpoint here.
+__all__ = [
+    "CAPABILITY_TAGS",
+    "ENDPOINT_REQUIREMENTS",
+    "Endpoint",
+    "required_endpoints",
+]
 
 CAPABILITY_TAGS: dict[str, str] = {
     "stubs": "stub",
