@@ -1,0 +1,4 @@
+# Deliberately broken YAML for parser-failure coverage.
+capabilities: [
+  stubs:
+    enabled: true
