@@ -1,9 +1,6 @@
 """QA SC-03 startup wiring / stdio system tests.
 
 IDs: QA-ACC-01, QA-SYS-01..06. Paired with #11.
-
-Harness + fixtures ship now. Behavioral asserts
-xfail until #11 (server.py is still main: pass).
 """
 
 from __future__ import annotations
@@ -14,20 +11,15 @@ import pytest
 
 from tests.system import harness
 
-# Expect fail until #11 wires startup/config/stdio.
-xfail_until_issue_11 = pytest.mark.xfail(
-    reason="blocked on #11",
-    strict=False,
-)
-
 
 def test_qa_acc_01_harness_spawns_xq_jewy():
     """Harness spawns installed xq-jewy; captures I/O."""
     cmd = harness.resolve_xq_jewy_command()
     assert cmd, "expected a spawn command"
+    # No XQ_JEWY_* → config failure exits promptly.
     result = harness.run_xq_jewy(timeout=5.0)
     assert not result.timed_out, (
-        "stub main should exit immediately"
+        "expected prompt config-failure exit"
     )
     assert result.exit_code is not None
     assert isinstance(result.stdout, bytes)
@@ -42,7 +34,6 @@ def test_harness_fixture_paths_are_absolute():
     assert os.path.isabs(str(path))
 
 
-@xfail_until_issue_11
 def test_qa_sys_01_missing_config_env():
     """Missing XQ_JEWY_CONFIG → failure contract."""
     env = harness.base_env(clear_xq=True)
@@ -50,7 +41,6 @@ def test_qa_sys_01_missing_config_env():
     harness.assert_config_failure_contract(result)
 
 
-@xfail_until_issue_11
 def test_qa_sys_02_relative_config_path():
     """Relative XQ_JEWY_CONFIG is rejected."""
     env = harness.base_env(clear_xq=True)
@@ -61,7 +51,6 @@ def test_qa_sys_02_relative_config_path():
     harness.assert_config_failure_contract(result)
 
 
-@xfail_until_issue_11
 def test_qa_sys_03_missing_config_file():
     """Missing absolute config path → failure."""
     missing = (
@@ -74,7 +63,6 @@ def test_qa_sys_03_missing_config_file():
     harness.assert_config_failure_contract(result)
 
 
-@xfail_until_issue_11
 @pytest.mark.parametrize(
     "fixture_name",
     [
@@ -95,12 +83,15 @@ def test_qa_sys_04_invalid_config_contents(
     harness.assert_config_failure_contract(result)
 
 
-@xfail_until_issue_11
 def test_qa_sys_05_valid_config_reaches_mcp_initialize():
     """Valid config: MCP initialize; keeps serving."""
     path = harness.fixture_path("valid_minimal.yaml")
     env = harness.base_env(clear_xq=True)
     env["XQ_JEWY_CONFIG"] = str(path)
+    # stubs-only requires WireMock URL (grammar only).
+    env["XQ_JEWY_WIREMOCK_BASE_URL"] = (
+        "http://127.0.0.1:8081"
+    )
     result, parsed = harness.speak_mcp_initialize(
         env=env, timeout=5.0
     )
@@ -114,7 +105,6 @@ def test_qa_sys_05_valid_config_reaches_mcp_initialize():
     assert result.exit_code != 0
 
 
-@xfail_until_issue_11
 def test_qa_sys_06_no_banners_or_startup_network():
     """
     No import stdout; no banner before initialize;
@@ -131,8 +121,9 @@ def test_qa_sys_06_no_banners_or_startup_network():
     env = harness.base_env(clear_xq=True)
     env["XQ_JEWY_CONFIG"] = str(path)
     # Unreachable if startup wrongly dials out.
-    env["XQ_JEWY_API_BASE_URL"] = "http://127.0.0.1:1"
-    env["XQ_JEWY_WIREMOCK_BASE_URL"] = "http://127.0.0.1:1"
+    # Valid unused URL grammar; stubs-only must not connect.
+    env["XQ_JEWY_API_BASE_URL"] = "http://127.0.0.1:9"
+    env["XQ_JEWY_WIREMOCK_BASE_URL"] = "http://127.0.0.1:9"
 
     result, parsed = harness.speak_mcp_initialize(
         env=env, timeout=3.0
