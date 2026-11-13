@@ -8,18 +8,72 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   checks:
+    name: Node ${{ matrix.node }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ["24.22.1", "26.12.1"]
+
     steps:
       - uses: actions/checkout@v5
 
-      - uses: astral-sh/setup-uv@v6
+      - name: Use Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v5
         with:
-          enable-cache: true
+          node-version: ${{ matrix.node }}
+          cache: npm
 
-      - name: Install dependencies
-        run: make sync
+      - name: node -v
+        run: node -v
 
-      - name: CI gate (lint, format, typecheck, tests)
-        run: make ci
+      - name: Install (N-CI-02)
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Typecheck (N-CI-05)
+        run: npm run typecheck
+
+      - name: Lint (N-CI-05)
+        run: npm run lint
+
+      - name: Format check (N-CI-05)
+        run: npm run format:check
+
+      - name: Unit tests (N-CI-05)
+        run: npm run test:unit
+
+      - name: Integration tests (N-CI-05)
+        run: npm run test:integration
+
+      - name: System tests (N-CI-05)
+        run: npm run test:system
+
+      - name: Coverage (N-CI-04, report-only)
+        run: npx vitest run --coverage --project unit --project integration
+
+      - name: Upload coverage (N-CI-04)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-node-${{ matrix.node }}
+          path: |
+            coverage/coverage-summary.json
+            coverage/coverage-final.json
+          if-no-files-found: error
+          retention-days: 14
+
+      # Gated until J1-T9 provides a real MCP stdio server (N-CI-03).
+      - name: Inspector smoke (N-CI-03, gated until J1-T9)
+        if: false
+        run: |
+          npx --yes @modelcontextprotocol/inspector@2.15.0 --cli node dist/index.js --method initialize --format json
+          npx --yes @modelcontextprotocol/inspector@2.15.0 --cli node dist/index.js --method tools/list --format json
