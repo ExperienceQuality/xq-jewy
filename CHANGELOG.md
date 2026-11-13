@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Reset repository to Node.js + TypeScript scaffold (Python/uv toolchain removed; see #33).
+
 ### Added
 
 - Initial project scaffold: uv + ruff + ty + pytest, layered package layout

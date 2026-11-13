@@ -1,6 +1,0 @@
-# YAML with neither capabilities nor enabled_tags (wrong shape).
-tags:
-  - stub
-server:
-  api_url: "http://localhost:8080"
-  wiremock_url: "http://localhost:8081"
