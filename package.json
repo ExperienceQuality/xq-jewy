@@ -1,0 +1,40 @@
+{
+  "name": "xq-jewy",
+  "version": "0.2.0",
+  "description": "MCP server for XQ backend-testing tools (Node.js + TypeScript scaffold)",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "xq-jewy": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=24.22.1"
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepare": "npm run build",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "lint": "oxlint --type-aware src test vitest.config.ts",
+    "format": "prettier --write src test vitest.config.ts package.json tsconfig.json README.md CHANGELOG.md .prettierrc.json .oxlintrc.json",
+    "format:check": "prettier --check src test vitest.config.ts package.json tsconfig.json README.md CHANGELOG.md .prettierrc.json .oxlintrc.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --coverage --project unit --project integration && vitest run --project system",
+    "test:unit": "vitest run --project unit",
+    "test:integration": "vitest run --project integration",
+    "test:system": "vitest run --project system",
+    "ci": "npm run build && npm run typecheck && npm run lint && npm run format:check && npm run test"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "@vitest/coverage-v8": "^5.1.0",
+    "oxlint": "^1.93.0",
+    "oxlint-tsgolint": "^7.0.2007",
+    "prettier": "^3.10.1",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  }
+}

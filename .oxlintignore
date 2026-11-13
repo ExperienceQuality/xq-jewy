@@ -1,0 +1,6 @@
+.squad/
+.cursor/
+xq-jewy/
+node_modules/
+dist/
+coverage/
