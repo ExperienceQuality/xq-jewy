@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: ["24.22.1", "26.12.1"]
+        node: ["24.22.1", "24.x", "26.12.1", "26.x"]
 
     steps:
       - uses: actions/checkout@v5
@@ -48,14 +48,35 @@ jobs:
       - name: Format check (N-CI-05)
         run: npm run format:check
 
+      - name: Prepare artifacts dir
+        run: mkdir -p artifacts
+
       - name: Unit tests (N-CI-05)
-        run: npm run test:unit
+        run: >
+          npx vitest run --project unit
+          --reporter=default --reporter=junit
+          --outputFile.junit=artifacts/junit-unit.xml
 
       - name: Integration tests (N-CI-05)
-        run: npm run test:integration
+        run: >
+          npx vitest run --project integration
+          --reporter=default --reporter=junit
+          --outputFile.junit=artifacts/junit-integration.xml
 
       - name: System tests (N-CI-05)
-        run: npm run test:system
+        run: >
+          npx vitest run --project system
+          --reporter=default --reporter=junit
+          --outputFile.junit=artifacts/junit-system.xml
+
+      - name: Upload JUnit (test evidence)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-node-${{ matrix.node }}
+          path: artifacts/junit-*.xml
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Coverage (N-CI-04, report-only)
         run: npx vitest run --coverage --project unit --project integration

@@ -14,7 +14,6 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 
 import { describe, expect, it } from "vitest";
-import { ConfigError } from "../../src/config/errors.js";
 import {
   CONFIG_FILE_MAX_BYTES,
   readConfigFile,
@@ -100,8 +99,7 @@ describe("N-INT-03", () => {
         await readConfigFile(fifo);
         throw new Error("expected not_a_file");
       } catch (error) {
-        expect(error).toBeInstanceOf(ConfigError);
-        expect((error as ConfigError).code).toBe("not_a_file");
+        expectConfigError(error, "not_a_file");
       }
       expect(Date.now() - started).toBeLessThan(2000);
     });
