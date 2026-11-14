@@ -24,6 +24,10 @@ export type ConfigErrorLocation =
   | { kind: "path"; path: string }
   | { kind: "line"; line: number; column: number };
 
+function assertNever(value: never): never {
+  throw new Error(`unexpected location: ${String(value)}`);
+}
+
 function formatLocation(location: ConfigErrorLocation): string {
   switch (location.kind) {
     case "env":
@@ -32,10 +36,8 @@ function formatLocation(location: ConfigErrorLocation): string {
       return location.path;
     case "line":
       return `${String(location.line)}:${String(location.column)}`;
-    default: {
-      const _exhaustive: never = location;
-      throw new Error(`unexpected location: ${String(_exhaustive)}`);
-    }
+    default:
+      return assertNever(location);
   }
 }
 
@@ -62,12 +64,8 @@ export class ConfigError extends Error {
   readonly code: ConfigErrorCode;
   readonly location: ConfigErrorLocation;
 
-  constructor(
-    code: ConfigErrorCode,
-    location: ConfigErrorLocation,
-    message?: string,
-  ) {
-    super(message ?? defaultMessage(code, location));
+  constructor(code: ConfigErrorCode, location: ConfigErrorLocation) {
+    super(defaultMessage(code, location));
     this.code = code;
     this.location = location;
   }
