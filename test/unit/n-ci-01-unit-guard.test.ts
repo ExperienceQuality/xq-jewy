@@ -34,10 +34,7 @@ const forbiddenSamples = [
 ] as const;
 
 /** System harness helpers may use fs/child_process; unit helpers must not. */
-const systemHarnessHelpers = new Set([
-  "spawn-bin.ts",
-  "mcp-stdio-client.ts",
-]);
+const systemHarnessHelpers = new Set(["spawn-bin.ts", "mcp-stdio-client.ts"]);
 
 function assertNoForbiddenImports(
   entries: Record<string, unknown>,
