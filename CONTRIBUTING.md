@@ -1,29 +1,45 @@
-# XQ-Jewy Coding Guidelines
+# Contributing to xq-jewy
 
-FastMCP server for backend testing tools. Small codebase — keep it that way.
+Node.js + TypeScript MCP server. Keep the surface small: config load → stdio MCP server → tools later.
 
 ## Design principle
 
 Fewest moving parts that satisfy the requirement. No layers "for later".
-A tool file + a config loader + a bootstrapper is the whole app until proven otherwise.
 
-## Files and their jobs
+## Toolchain
 
-| File | Job | Max size (guideline) |
-|---|---|---|
-| `server.py` | Read env, load config, build server, `mcp.run()` | ~15 lines |
-| `configuration.py` | Load YAML, validate with Pydantic, return config | ~40 lines |
-| `bootstrap.py` | Build FileSystemProviders + `mcp.enable()` tags | ~25 lines |
-| `tools/<cap>/<file>.py` | `@tool` functions — validate input, call helper, return dict | thin |
-| `services/*.py` | Plain functions doing the real work | as needed |
-| `infrastructure/*.py` | External HTTP calls only | as needed |
-| `domain/` | Pydantic models only when a shared shape exists | optional |
+| Tool | Role |
+|---|---|
+| **npm** | Install and scripts (`npm ci`, `npm run …`) |
+| **TypeScript (`tsc`)** | Build (`npm run build`) and typecheck (`npm run typecheck`) |
+| **oxlint** | Lint with `--type-aware` (`npm run lint`) |
+| **Prettier** | Format (`npm run format` / `format:check`) |
+| **Vitest** | Tests in three projects: `unit`, `integration`, `system` |
+
+Quality gate before commit:
+
+```bash
+npm run ci
+```
+
+That runs build, typecheck, lint, format check, and the full test suite.
+
+## Layout (current)
+
+| Path | Job |
+|---|---|
+| `src/index.ts` | Process entry: load config, start stdio MCP, failure gates |
+| `src/server.ts` | `McpServer` + `serveStdio` wiring |
+| `src/config/` | Path → read → YAML → schema → endpoints (`loadConfiguration`) |
+| `test/unit/` | Pure unit tests |
+| `test/integration/` | Loader / wiring against real fixtures |
+| `test/system/` | Process + MCP stdio contracts (N-\* IDs) |
+| `docs/config/` | Consumer mcp.json + YAML examples |
+| `config.example.yaml` | Canonical full-capability YAML sample |
 
 ## Configuration
 
-Canonical schema is `capabilities` / `enabled_tags` (see
-`config.example.yaml` and `docs/config/`). Legacy `tags` / `server` YAML is
-**rejected**.
+Canonical schema is `capabilities` / `enabled_tags` (see `config.example.yaml` and `docs/config/`). Legacy `tags` / `server` YAML is **rejected**.
 
 ### Env vars (exact names)
 
@@ -33,91 +49,53 @@ Canonical schema is `capabilities` / `enabled_tags` (see
 | `XQ_JEWY_API_BASE_URL` | Required when the union of enabled capabilities needs the API. |
 | `XQ_JEWY_WIREMOCK_BASE_URL` | Required when the union needs WireMock. |
 
-MCP servers inherit unpredictable working directories depending on the host
-(desktop app vs CLI vs agent), so relative paths are refused.
+MCP hosts give unpredictable working directories, so relative paths are refused. Put env in `mcp.json` `env` (see `docs/config/mcp.*.json`).
 
 ### Capability → tag → endpoint
 
-| Capability   | Tag            | Endpoint(s)    |
-|--------------|----------------|----------------|
-| `stubs`      | `stub`         | WireMock       |
-| `rest`       | `rest`         | API            |
+| Capability | Tag | Endpoint(s) |
+|---|---|---|
+| `stubs` | `stub` | WireMock |
+| `rest` | `rest` | API |
 | `assertions` | `verification` | API + WireMock |
-| `reporting`  | `reporting`    | none           |
+| `reporting` | `reporting` | none |
 
-Required URL env vars are the **union** over enabled capabilities.
-A URL that is set is validated even when not needed — omit unused URL vars.
+Required URL env vars are the **union** over enabled capabilities. Omit unused URL vars — a set URL is validated even when not needed.
 
 ### YAML rules
 
 - YAML holds **no URLs and no secrets**.
 - `enabled_tags` must be non-empty and covered by enabled capabilities.
-- Validate before building anything.
+- Validate before building the server.
 
 ### First-error order
 
 path → file/parse → schema/tag coverage → required-set derivation → API →
 WireMock → aggregate invariant → server construction and run.
 
-## Tools
-
-- Standalone `from fastmcp.tools import tool` decorator. Never `@mcp.tool`,
-  never instantiate `FastMCP` inside tool modules.
-- Every tool: type hints on all params, docstring describing the tool for the
-  LLM (it reads the docstring to decide when to call), at least one capability
-  tag (`stub`, `rest`, `verification`, `reporting`) plus qualifier tags.
-- Tools stay thin: parse args, call a service function, return a plain dict.
-  No business logic inside `@tool` functions.
-
-## Imports and lifecycle
-
-- Absolute imports only (`from xq_jewy.services.x import y`). FileSystemProvider
-  may load files outside package context — relative imports break.
-- No side effects at import time: no network calls, no file reads, no client
-  construction at module top level. Discovery imports every tool file — it
-  must be cheap.
-- Expensive objects (HTTP clients): module-level `functools.lru_cache` getter
-  is enough. No singleton classes, no globals-with-init-function ceremony.
-
-  ```python
-  @lru_cache
-  def http_client() -> httpx.Client:
-      return httpx.Client(timeout=30)
-  ```
-
-- Prefer plain functions over classes. Use a class only when you need to hold
-  stateful resources (and even then, `lru_cache` + function usually wins).
-
-## Adding a tool (checklist)
-
-1. Create `tools/<capability>/<name>.py` with `@tool(tags={...})` functions.
-2. Add the logic to `services/` as a plain function.
-3. Add the capability's tags to the tag universe in `configuration.py` if new.
-4. Done — provider discovery picks it up. No central registry edits.
-
-## Adding a capability (checklist)
-
-1. `mkdir src/xq_jewy/tools/<name>` + `__init__.py` + tool files.
-2. Register its tags in `CAPABILITY_TAGS`.
-3. Consumer enables it in their YAML.
-
 ## Testing
 
-- `tests/unit/` — config validation, service logic (pure functions, easy).
-- `tests/architecture/` — discovery, tag filtering, disabled-capability
-  behavior. Build servers in-test against the real `tools/` tree.
-- `tests/integration/` — real HTTP flows; only when external services exist.
-- `tests/system/` — docs/examples contracts (QA-SYS-*).
-- Every new tool needs at least one test proving it is discovered and tagged.
+- `test/unit/` — config path/schema/errors and pure helpers.
+- `test/integration/` — `loadConfiguration` against fixtures under `docs/config/`.
+- `test/system/` — spawn built `dist/index.js`, MCP initialize / failure gates / docs contracts.
 
-## Quality gate
+Run one project:
 
-`make ci` must pass before commit: ruff lint, ruff format --check, ty, pytest.
+```bash
+npm run test:unit
+npm run test:integration
+npm run test:system
+```
+
+System tests require a prior `npm run build` so `dist/index.js` exists.
+
+## Issue / QA pairing (done rule)
+
+Dev issues (J\*) pair with QA issues (QJ\*). An implementation issue closes only when its paired QJ\* test IDs pass on **both Node 24 and Node 26**, with Test Architect–reviewed evidence: commit SHA, `node -v`, a JUnit or JSON report naming each N-\* ID, CI run URL, coverage artifact, and Inspector output where applicable. A skipped test is not a pass.
 
 ## What NOT to do
 
-- No custom tool registries or decorators — FileSystemProvider already does it.
-- No dependency-injection framework. Pass the dependency or use `lru_cache`.
-- No class-per-function wrappers. `class XService` holding only functions = noise.
-- No relative imports, ever.
-- No printing to stdout — stdout is the MCP transport. Log to stderr only.
+- Do not print to stdout — stdout is the MCP transport. Log to stderr only.
+- Do not put URLs or secrets in YAML.
+- Do not rely on CWD or relative `XQ_JEWY_CONFIG` paths.
+- Do not document removed legacy toolchains or invent a second install path beside npm.
