@@ -6,7 +6,9 @@ export function expectConfigError(
   code: ConfigError["code"],
 ): ConfigError {
   expect(error).toBeInstanceOf(ConfigError);
-  const configError = error as ConfigError;
-  expect(configError.code).toBe(code);
-  return configError;
+  if (!(error instanceof ConfigError)) {
+    throw new TypeError("expected ConfigError");
+  }
+  expect(error.code).toBe(code);
+  return error;
 }

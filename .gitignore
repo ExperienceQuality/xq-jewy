@@ -9,8 +9,7 @@ artifacts/
 .DS_Store
 config.yaml
 .devin
-.squad/
-.cursor/
+.squad/worktrees/
 .vscode/
 .venv/
 __pycache__/

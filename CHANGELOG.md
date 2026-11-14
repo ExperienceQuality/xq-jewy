@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Node.js + TypeScript scaffold: TypeScript 7, Vitest 5 (unit/integration/system), oxlint + Prettier, Node engines `>=24.22.1`.
+- F1 CI test-evidence: 4-leg Node matrix (24.22.1, 24.x, 26.12.1, 26.x), per-leg JUnit artifacts, named N-CI-06/N-CI-08 checks, stronger N-CI-01 unit fs guard.
 - MCP stdio server entrypoint: load configuration, then `McpServer` + `serveStdio`; config failure and D5 internal-error gates (#49).
 - `loadConfiguration` facade composing path → read → YAML → schema → endpoints (#47).
-- Initial project scaffold: uv + ruff + ty + pytest, layered package layout

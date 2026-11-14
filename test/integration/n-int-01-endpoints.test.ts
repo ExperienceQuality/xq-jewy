@@ -34,10 +34,11 @@ describe("N-INT-01", () => {
       );
       throw new Error("expected invalid_url on optional API");
     } catch (error) {
-      expectConfigError(error, "invalid_url");
-      expect((error as { location: { name: string } }).location.name).toBe(
-        XQ_JEWY_API_BASE_URL_ENV,
-      );
+      const configError = expectConfigError(error, "invalid_url");
+      expect(configError.location).toEqual({
+        kind: "env",
+        name: XQ_JEWY_API_BASE_URL_ENV,
+      });
     }
 
     try {
@@ -47,10 +48,11 @@ describe("N-INT-01", () => {
       );
       throw new Error("expected missing API");
     } catch (error) {
-      expectConfigError(error, "missing_env");
-      expect((error as { location: { name: string } }).location.name).toBe(
-        XQ_JEWY_API_BASE_URL_ENV,
-      );
+      const configError = expectConfigError(error, "missing_env");
+      expect(configError.location).toEqual({
+        kind: "env",
+        name: XQ_JEWY_API_BASE_URL_ENV,
+      });
     }
   });
 });

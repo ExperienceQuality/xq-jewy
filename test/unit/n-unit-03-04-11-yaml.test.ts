@@ -1,9 +1,14 @@
 import { describe, expect, it } from "vitest";
+import type { ConfigErrorCode } from "../../src/config/errors.js";
 import {
   CONFIG_YAML_PARSER_OPTIONS,
   parseConfigYaml,
 } from "../../src/config/yaml.js";
 import { expectConfigError } from "../helpers/config-error.js";
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
 
 describe("N-UNIT-11", () => {
   it("freezes parser options", () => {
@@ -17,7 +22,7 @@ describe("N-UNIT-11", () => {
 });
 
 describe("N-UNIT-03", () => {
-  const cases: Array<{ yaml: string; code: string }> = [
+  const cases: Array<{ yaml: string; code: ConfigErrorCode }> = [
     { yaml: "a: [", code: "yaml_syntax" },
     { yaml: "a: 1\n---\nb: 2\n", code: "multiple_documents" },
     { yaml: "", code: "not_a_mapping" },
@@ -44,10 +49,8 @@ describe("N-UNIT-03", () => {
       parseConfigYaml(yaml);
       throw new Error(`expected ${code}`);
     } catch (error) {
-      expectConfigError(error, code as never);
-      expect((error as { location: { kind: string } }).location.kind).toBe(
-        "line",
-      );
+      const configError = expectConfigError(error, code);
+      expect(configError.location.kind).toBe("line");
     }
   });
 });
@@ -68,12 +71,26 @@ describe("N-UNIT-04", () => {
         "  c: FALSE",
       ].join("\n"),
     );
-    const caps = root["capabilities"] as Record<string, { enabled: unknown }>;
-    expect(caps["stubs"]?.enabled).toBe("yes");
-    const flags = root["flags"] as Record<string, unknown>;
-    expect(flags["a"]).toBe(true);
-    expect(flags["b"]).toBe(true);
-    expect(flags["c"]).toBe(false);
+    const capsValue = root["capabilities"];
+    expect(isRecord(capsValue)).toBe(true);
+    if (!isRecord(capsValue)) {
+      return;
+    }
+    const stubsValue = capsValue["stubs"];
+    expect(isRecord(stubsValue)).toBe(true);
+    if (!isRecord(stubsValue)) {
+      return;
+    }
+    expect(stubsValue["enabled"]).toBe("yes");
+
+    const flagsValue = root["flags"];
+    expect(isRecord(flagsValue)).toBe(true);
+    if (!isRecord(flagsValue)) {
+      return;
+    }
+    expect(flagsValue["a"]).toBe(true);
+    expect(flagsValue["b"]).toBe(true);
+    expect(flagsValue["c"]).toBe(false);
     expect(root["literal"]).toBe("1:20");
   });
 });

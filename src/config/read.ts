@@ -82,6 +82,14 @@ async function readBoundedFile(
   return new Uint8Array(slice);
 }
 
+function errnoCode(error: unknown): string | undefined {
+  if (typeof error !== "object" || error === null || !("code" in error)) {
+    return undefined;
+  }
+  const code = Reflect.get(error, "code");
+  return typeof code === "string" ? code : undefined;
+}
+
 /** Read and decode a config file from a resolved absolute path (J1-T4). */
 export async function readConfigFile(absolutePath: string): Promise<string> {
   let handle: Awaited<ReturnType<typeof open>> | undefined;
@@ -91,14 +99,14 @@ export async function readConfigFile(absolutePath: string): Promise<string> {
       constants.O_RDONLY | constants.O_NONBLOCK,
     );
   } catch (error: unknown) {
-    const err = error as NodeJS.ErrnoException;
-    if (err.code === "ENOENT") {
+    const code = errnoCode(error);
+    if (code === "ENOENT") {
       throw new ConfigError("not_found", {
         kind: "path",
         path: absolutePath,
       });
     }
-    if (err.code === "EACCES" || err.code === "EPERM") {
+    if (code === "EACCES" || code === "EPERM") {
       throw new ConfigError("unreadable", {
         kind: "path",
         path: absolutePath,
