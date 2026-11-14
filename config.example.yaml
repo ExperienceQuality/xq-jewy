@@ -1,6 +1,7 @@
 # Canonical capabilities / enabled_tags schema.
 # No URLs or secrets in YAML — set XQ_JEWY_API_BASE_URL /
-# XQ_JEWY_WIREMOCK_BASE_URL in mcp.json env (union over enabled capabilities).
+# XQ_JEWY_WIREMOCK_BASE_URL in mcp.json env (Node consumer; union over
+# enabled capabilities). See docs/config/ for single-mode examples.
 
 capabilities:
   stubs:

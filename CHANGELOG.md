@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Docs and examples for Node config setup: README, CONTRIBUTING, `docs/config/` mcp.json launches use `node` + `dist/index.js` (no `uvx` / Python leftovers; #51).
 - ConfigError messages come only from code + safe location (free-form message arg removed; F2 / #38).
 - Reset repository to Node.js + TypeScript scaffold (Python/uv toolchain removed; see #33).
 - CI Inspector smoke (N-CI-03) is mandatory and passes config via Inspector `-e` (#49).
