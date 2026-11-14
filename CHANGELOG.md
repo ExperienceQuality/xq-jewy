@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- ConfigError messages come only from code + safe location (free-form message arg removed; F2 / #38).
 - Reset repository to Node.js + TypeScript scaffold (Python/uv toolchain removed; see #33).
 
 ### Added

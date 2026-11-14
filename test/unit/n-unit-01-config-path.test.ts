@@ -15,16 +15,13 @@ describe("N-UNIT-01", () => {
       expectConfigError(error, "missing_env");
     }
 
-    try {
-      resolveConfigPath({ [XQ_JEWY_CONFIG_ENV]: "" });
-    } catch (error) {
-      expectConfigError(error, "empty_env");
-    }
-
-    try {
-      resolveConfigPath({ [XQ_JEWY_CONFIG_ENV]: "   " });
-    } catch (error) {
-      expectConfigError(error, "empty_env");
+    for (const empty of ["", "   "] as const) {
+      try {
+        resolveConfigPath({ [XQ_JEWY_CONFIG_ENV]: empty });
+        throw new Error(`expected empty_env for ${JSON.stringify(empty)}`);
+      } catch (error) {
+        expectConfigError(error, "empty_env");
+      }
     }
 
     for (const relative of [
@@ -48,5 +45,11 @@ describe("N-UNIT-01", () => {
     expect(resolveConfigPath({ [XQ_JEWY_CONFIG_ENV]: "/tmp/foo.yml" })).toBe(
       "/tmp/foo.yml",
     );
+    expect(
+      resolveConfigPath({ [XQ_JEWY_CONFIG_ENV]: "/tmp/foo bar.yml" }),
+    ).toBe("/tmp/foo bar.yml");
+    expect(
+      resolveConfigPath({ [XQ_JEWY_CONFIG_ENV]: "/tmp/ユニコード.yml" }),
+    ).toBe("/tmp/ユニコード.yml");
   });
 });
