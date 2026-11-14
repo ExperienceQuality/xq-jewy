@@ -71,9 +71,8 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      # Gated until J1-T9 provides a real MCP stdio server (N-CI-03).
-      - name: Inspector smoke (N-CI-03, gated until J1-T9)
-        if: false
+      - name: Inspector smoke (N-CI-03)
         run: |
-          npx --yes @modelcontextprotocol/inspector@2.15.0 --cli node dist/index.js --method initialize --format json
-          npx --yes @modelcontextprotocol/inspector@2.15.0 --cli node dist/index.js --method tools/list --format json
+          CFG="${{ github.workspace }}/docs/config/xq.reporting-only.yaml"
+          npx --yes @modelcontextprotocol/inspector@2.15.0 --cli node dist/index.js -e "XQ_JEWY_CONFIG=$CFG" --method initialize --format json
+          npx --yes @modelcontextprotocol/inspector@2.15.0 --cli node dist/index.js -e "XQ_JEWY_CONFIG=$CFG" --method tools/list --format json
