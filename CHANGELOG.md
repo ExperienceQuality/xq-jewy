@@ -14,4 +14,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `loadConfiguration` facade composing path → read → YAML → schema → endpoints (#47).
 - Initial project scaffold: uv + ruff + ty + pytest, layered package layout
