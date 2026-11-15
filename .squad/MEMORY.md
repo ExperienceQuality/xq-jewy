@@ -29,7 +29,7 @@ This file holds canonical, human-readable knowledge for the repository. Update i
 
 ## Architecture
 
-* Stack decision: `docs/adr/0001-node-typescript-stack.md` (Accepted; amended 2026-11-14 for 4-leg CI matrix).
+* Stack decision: `docs/adr/0001-node-typescript-stack.md` (Accepted; amended 2026-11-14 for 4-leg CI matrix; N-CI-03 ungated 2026-11-15).
 * Validation/YAML: Zod 4 + eemeli `yaml` 2.x (Wave 2 / Feature 1).
 * Previous Python/FastMCP layout is retired; Node scripts are the only gate.
 * Approved config error surface: fixed `CONFIG_ERROR_CODES` (15 codes) and location kinds `env` | `path` | `line`. Message text must not carry secrets or raw URLs beyond what the typed location intentionally exposes (paths may appear; env *values* must not).
@@ -54,8 +54,10 @@ This file holds canonical, human-readable knowledge for the repository. Update i
 * Keep machine-readable JUnit per leg so TA can map named `N-*` checks without re-running locally.
 * Do not gitignore all of `.squad/`; concurrent delivery needs `.squad/worktrees/` ignored while claims/memory stay visible.
 * F2 (`f2/error-path-hardening`, merged as #57 / `381dccf`) removed the free-form ConfigError message arg and landed on main before #47. Delivery records: `.squad/memory/deliveries/f2-error-path-hardening.ndjson`.
-* #47 (`j1-t8/load-configuration`) owns the `loadConfiguration` facade and aggregate `TypeError` boundary. Delivery records: `.squad/memory/deliveries/j1-t8-load-configuration.ndjson`.
-* #49 (`j1-t9/server-entrypoint`) owns MCP stdio entrypoint, ConfigError/D5 process gates, and ungated N-CI-03. Delivery records: `.squad/memory/deliveries/j1-t9-server-entrypoint.ndjson`.
-* #51 (`j1-t10/docs-node-config`) owns Node consumer docs: `node` + `dist/index.js` mcp.json form, four `docs/config/` pairs, N-SYS-07, no `uvx`. Delivery records: `.squad/memory/deliveries/j1-t10-docs-node-config.ndjson`.
-* F1 (`f1/ci-test-evidence` / #56) owns 4-leg CI matrix, per-leg JUnit evidence, N-CI-06/08, stronger N-CI-01, ADR-0001, `@types/node` ^24, and lint `--deny-warnings`.
-* `fix/ci-system-flakes` hardens post-F1 CI system flakes (esp. Node 24.22.1): sync failure-gate stderr, `NODE_NO_WARNINGS`, MCP empty-stderr `Connection closed` retry, serial system Vitest, retain `serveStdio` handle. Delivery records: `.squad/memory/deliveries/fix-ci-system-flakes.ndjson`.
+* #47 (`j1-t8/load-configuration`) landed the `loadConfiguration` facade and aggregate `TypeError` boundary. Delivery records: `.squad/memory/deliveries/j1-t8-load-configuration.ndjson`.
+* #49 (`j1-t9/server-entrypoint`) landed MCP stdio entrypoint, ConfigError/D5 process gates, and ungated N-CI-03. Delivery records: `.squad/memory/deliveries/j1-t9-server-entrypoint.ndjson`.
+* #51 (`j1-t10/docs-node-config`) landed Node consumer docs: `node` + `dist/index.js` mcp.json form, four `docs/config/` pairs, N-SYS-07, no `uvx`. Delivery records: `.squad/memory/deliveries/j1-t10-docs-node-config.ndjson`.
+* F1 (`f1/ci-test-evidence` / #56) landed 4-leg CI matrix, per-leg JUnit evidence, N-CI-06/08, stronger N-CI-01, ADR-0001, `@types/node` ^24, and lint `--deny-warnings`.
+* `fix/ci-system-flakes` (#61) hardened post-F1 CI system flakes (esp. Node 24.22.1): sync failure-gate stderr, `NODE_NO_WARNINGS`, MCP empty-stderr `Connection closed` retry, serial system Vitest, retain `serveStdio` handle. Delivery records: `.squad/memory/deliveries/fix-ci-system-flakes.ndjson`.
+* Feature 0+1 parent #32 and all Wave 0–3 J/QJ pairs closed with TA evidence on `bec4329` / CI run `43670084332`. Delivery records: `.squad/memory/deliveries/wave1-qa-closeout.ndjson`, `.squad/memory/deliveries/wave2-wave3-qa-closeout.ndjson`.
+* Some `N-ACC-*` IDs lack a dedicated Vitest `describe` title; TA may cite covering `N-UNIT` / `N-INT` / `N-SYS` suites when the behavior is exercised and named there.

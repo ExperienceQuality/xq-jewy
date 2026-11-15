@@ -1,6 +1,6 @@
 # ADR-0001: Node.js + TypeScript stack
 
-- Status: Accepted (amended 2026-11-14)
+- Status: Accepted (amended 2026-11-14; N-CI-03 ungated 2026-11-15)
 - Date: 2026-11-13
 
 ## Context
@@ -29,9 +29,14 @@ Keep exact pins **and** floating majors so CI proves both the Inspector floors a
 
 `fail-fast` remains `false`. This amends the original ADR matrix of `24.x` / `26.x` only.
 
+### Amendment 2026-11-15 — N-CI-03 ungated
+
+J1-T9 landed a real MCP stdio entrypoint (`src/index.ts` + `src/server.ts` / `serveStdio`). Inspector smoke (N-CI-03) is **mandatory** on every matrix leg: pass an absolute config path via Inspector `-e XQ_JEWY_CONFIG=...`; empty `tools/list` is a pass.
+
 ## Consequences
 
 - Python artefacts (uv/ruff/ty/pytest layout) are removed; Node scripts are the gate (`npm run ci`).
 - `@types/node` tracks the engines floor (`^24`).
-- Inspector smoke (N-CI-03) stays gated until a real MCP stdio server exists (J1-T9).
+- Inspector smoke (N-CI-03) is ungated and required (see amendment 2026-11-15).
 - Machine-readable per-leg JUnit reports are required for TA evidence of named `N-*` checks.
+- System Vitest runs serially (`fileParallelism: false`, `maxWorkers: 1`) to keep stdio MCP children stable under CI load.
