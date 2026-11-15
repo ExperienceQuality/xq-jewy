@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Post–Feature 1 hygiene: ADR-0001 records N-CI-03 as ungated; commit leftover `.squad/memory/deliveries/` closeout records.
 - Harden CI system-test flake surface: sync failure-gate stderr flush, MCP connect retry on empty-stderr Connection closed, serialize system Vitest workers.
 - Docs and examples for Node config setup: README, CONTRIBUTING, `docs/config/` mcp.json launches use `node` + `dist/index.js` (no `uvx` / Python leftovers; #51).
 - ConfigError messages come only from code + safe location (free-form message arg removed; F2 / #38).
