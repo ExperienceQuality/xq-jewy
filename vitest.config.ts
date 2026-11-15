@@ -32,6 +32,9 @@ export default defineConfig({
           environment: "node",
           testTimeout: 20_000,
           hookTimeout: 20_000,
+          // Stdio MCP children are sensitive to parallel file workers on CI.
+          fileParallelism: false,
+          maxWorkers: 1,
         },
       }),
     ],

@@ -151,6 +151,8 @@ export function baseSpawnEnv(
   return {
     PATH: process.env["PATH"] ?? "/usr/bin:/bin",
     HOME: process.env["HOME"] ?? "/tmp",
+    // Keep D5 one-line stderr free of Node runtime warning noise.
+    NODE_NO_WARNINGS: "1",
     ...extra,
   };
 }
@@ -165,7 +167,10 @@ export function assertFailureGate(
   const stderrText = result.stderr.toString("utf8");
   expect(stderrText.endsWith("\n")).toBe(true);
   const lines = stderrText.split("\n").filter((line) => line.length > 0);
-  expect(lines).toHaveLength(1);
+  expect(
+    lines,
+    `expected one stderr line for ${expectedCodePrefix}; got ${String(lines.length)}: ${JSON.stringify(lines)}`,
+  ).toHaveLength(1);
   const line = lines[0] ?? "";
   expect(line.startsWith(expectedCodePrefix)).toBe(true);
   expect(line).not.toMatch(/\bat\s+/);
