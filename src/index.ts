@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+import { writeSync } from "node:fs";
+
 import {
   ConfigError,
   formatConfigErrorLine,
@@ -11,8 +13,9 @@ const INTERNAL_ERROR_LINE = "xq-jewy: internal error";
 
 let exiting = false;
 
+/** Sync write so the failure line is fully flushed before process.exit. */
 function writeStderrLine(line: string): void {
-  process.stderr.write(`${line}\n`);
+  writeSync(process.stderr.fd, `${line}\n`);
 }
 
 function exitFailure(): never {
@@ -65,7 +68,9 @@ async function main(): Promise<void> {
   }
 
   const { startServer } = await import("./server.js");
-  startServer(config);
+  // Retain the handle so serveStdio's stdin keep-alive is not GC-eligible.
+  const serverHandle = startServer(config);
+  void serverHandle;
 }
 
 main().catch((error: unknown) => {

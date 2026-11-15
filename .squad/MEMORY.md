@@ -22,7 +22,8 @@ This file holds canonical, human-readable knowledge for the repository. Update i
 * `ConfigError` is constructed as `new ConfigError(code, location)` only. Do not pass a free-form message; `Error.message` is always produced by `defaultMessage(code, location)`.
 * Stderr rendering for config failures uses `formatConfigErrorLine` (`code` + safe location).
 * Aggregate startup invariant failures from `createStartupConfiguration` throw `TypeError`, never `ConfigError`.
-* Process startup gates: `ConfigError` → one `formatConfigErrorLine` stderr line + exit 1; any other failure (D5) → fixed `xq-jewy: internal error` + exit 1 (empty stdout).
+* Process startup gates: `ConfigError` → one `formatConfigErrorLine` stderr line + exit 1; any other failure (D5) → fixed `xq-jewy: internal error` + exit 1 (empty stdout). Emit those lines with `writeSync(process.stderr.fd, …)` before `process.exit` so the line fully flushes (do not rely on async `stderr.write`).
+* After successful config load, retain the `startServer` / `serveStdio` return handle in `src/index.ts` so stdin keep-alive is not GC-eligible.
 * `XQ_JEWY_TEST_INJECT_REJECTION=1` is a test-only D5 hook (N-SYS-06), not a product feature.
 * Documented mcp.json launch is `command: node` with `args: [<absolute path to dist/index.js>]`. Owned docs must not use `uvx` / Python toolchain leftovers. `npx -y github:ExperienceQuality/xq-jewy` is residual risk / untested.
 
@@ -37,7 +38,9 @@ This file holds canonical, human-readable knowledge for the repository. Update i
 
 ## Testing strategy
 
-* Vitest 5 projects: `unit`, `integration`, `system`. Coverage (`@vitest/coverage-v8`) is report-only (no % thresholds), unit+integration only; `autoAttachSubprocess` is false.
+* Vitest 5 projects: `unit`, `integration`, `system`. Coverage (`@vitest/coverage-v8`) is report-only (no % thresholds), unit+integration only; `autoAttachSubprocess` is false. System project runs serial (`fileParallelism: false`, `maxWorkers: 1`) because stdio MCP children flake under parallel file workers on CI.
+* System harness env sets `NODE_NO_WARNINGS=1` (spawn + MCP connect) so D5/ConfigError one-line stderr asserts stay free of Node runtime warning noise.
+* `connectMcpSession` surfaces child stderr on `Connection closed` and retries once only when stderr is empty (stdio race); non-empty stderr is a real failure and must not retry.
 * **CI matrix (F1):** `24.22.1`, `24.x`, `26.12.1`, `26.x` on `ubuntu-latest`, `fail-fast: false`. Exact pins prove Inspector floors; floating majors prove current line heads.
 * **Test evidence:** each matrix leg uploads JUnit (`artifacts/junit-*.xml` → artifact `junit-node-<version>`) and coverage JSON. Named checks include N-CI-01 (unit fs guard), N-CI-06 (tree hygiene), N-CI-08 (coverage config).
 * N-UNIT-01 (path resolution), N-UNIT-08 (ConfigError shape/redaction), and N-ACC-09 (single-line stderr) are hardened with **value-fed** redaction: feed secret-like strings through real failure APIs (`resolveConfigPath`, etc.), then assert both `message` and `formatConfigErrorLine` omit those values. Prefer this over constructing `ConfigError` alone when covering secrecy.
@@ -55,3 +58,4 @@ This file holds canonical, human-readable knowledge for the repository. Update i
 * #49 (`j1-t9/server-entrypoint`) owns MCP stdio entrypoint, ConfigError/D5 process gates, and ungated N-CI-03. Delivery records: `.squad/memory/deliveries/j1-t9-server-entrypoint.ndjson`.
 * #51 (`j1-t10/docs-node-config`) owns Node consumer docs: `node` + `dist/index.js` mcp.json form, four `docs/config/` pairs, N-SYS-07, no `uvx`. Delivery records: `.squad/memory/deliveries/j1-t10-docs-node-config.ndjson`.
 * F1 (`f1/ci-test-evidence` / #56) owns 4-leg CI matrix, per-leg JUnit evidence, N-CI-06/08, stronger N-CI-01, ADR-0001, `@types/node` ^24, and lint `--deny-warnings`.
+* `fix/ci-system-flakes` hardens post-F1 CI system flakes (esp. Node 24.22.1): sync failure-gate stderr, `NODE_NO_WARNINGS`, MCP empty-stderr `Connection closed` retry, serial system Vitest, retain `serveStdio` handle. Delivery records: `.squad/memory/deliveries/fix-ci-system-flakes.ndjson`.
